@@ -232,7 +232,36 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
         cursor.close()
         return newsList
     }
+    fun getNewsById(id: Int): News? {
+        val db = readableDatabase
+        val cursor = db.query("News", null, "id = ?", arrayOf(id.toString()), null, null, null)
 
+        var news: News? = null
+        if (cursor.moveToFirst()) {
+            val idIndex = cursor.getColumnIndex("id")
+            val smallPixIndex = cursor.getColumnIndex("smallPix")
+            val bigPixIndex = cursor.getColumnIndex("bigPix")
+            val titleIndex = cursor.getColumnIndex("title")
+            val contentIndex = cursor.getColumnIndex("content")
+            val iconIndex = cursor.getColumnIndex("icon")
+            val typeIndex = cursor.getColumnIndex("type")
+            val writerIndex = cursor.getColumnIndex("writer")
+
+            if (idIndex != -1 && smallPixIndex != -1 && bigPixIndex != -1 && titleIndex != -1 && contentIndex != -1 && iconIndex != -1 && typeIndex != -1 && writerIndex != -1) {
+                val id = cursor.getInt(idIndex)
+                val smallPix = cursor.getString(smallPixIndex)
+                val bigPix = cursor.getString(bigPixIndex)
+                val title = cursor.getString(titleIndex)
+                val content = cursor.getString(contentIndex)
+                val icon = cursor.getInt(iconIndex)
+                val type = cursor.getString(typeIndex)
+                val writer = cursor.getString(writerIndex)
+                news = News(id, smallPix, bigPix, title, content, icon, type, writer)
+            }
+        }
+        cursor.close()
+        return news
+    }
 }
 
 

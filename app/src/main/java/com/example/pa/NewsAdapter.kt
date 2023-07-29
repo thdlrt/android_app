@@ -67,16 +67,24 @@ class NewsAdapter(private val items: List<News>, private val context: Context): 
             holder.icon.setImageResource(item.icon)
             val bitmap = BitmapFactory.decodeFile(item.smallPix)
             holder.pix.setImageBitmap(bitmap)
+            //跳转新闻页
+            holder.main.setOnClickListener {
+                val intent = Intent(context, NewsActivity::class.java)
+                intent.putExtra("id", item.id)
+                context.startActivity(intent)
+            }
         } else if (holder is ViewHolderWithoutImage) {
             holder.title.text = item.title
             holder.type.text = item.type
             holder.from.text = item.writer
             holder.icon.setImageResource(item.icon)
+            //跳转新闻页
+            holder.main.setOnClickListener {
+                val intent = Intent(context, NewsActivity::class.java)
+                intent.putExtra("id", item.id)
+                context.startActivity(intent)
+            }
         }
-        //跳转新闻页
-//        val intent = Intent(context, NewsActivity::class.java)
-//        intent.putExtra("id", item.id)
-//        context.startActivity(intent)
     }
 
     override fun getItemCount() = items.size

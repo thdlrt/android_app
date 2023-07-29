@@ -1,21 +1,28 @@
 package com.example.pa
 
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import com.example.pa.databinding.ActivityNewsBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class NewsActivity : AppCompatActivity() {
     private var onstar:Boolean = false
     private var like:Boolean = false
+    private lateinit var binding:ActivityNewsBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_news)
+        binding = ActivityNewsBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
         //返回按钮
         val back: ImageView = findViewById(R.id.back)
         back.setOnClickListener {
@@ -71,6 +78,21 @@ class NewsActivity : AppCompatActivity() {
         val share:ImageView = findViewById(R.id.share)
         share.setOnClickListener {
             Toast.makeText(this, "分享成功!经验+3",Toast.LENGTH_SHORT).show()
+        }
+        val id = intent.getIntExtra("id",-1)
+        Log.w("assert","$id")
+        val dbHelper = DatabaseHelper.getInstance(this)
+        var data = dbHelper.getNewsById(id)
+        //显示
+        data?.let {
+            binding.title.text = it.title
+            binding.writer.text = it.writer
+            if(it.bigPix!=null) {
+                binding.pix.visibility = View.VISIBLE
+                val myBitmap = BitmapFactory.decodeFile(it.bigPix)
+                binding.pix.setImageBitmap(myBitmap)
+            }
+            binding.content.text = it.content
         }
     }
 }
