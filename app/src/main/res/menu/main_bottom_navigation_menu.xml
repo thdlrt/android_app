@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_home"
+        android:icon="@drawable/ic_home"
+        android:title="主页" />
+    <item
+        android:id="@+id/action_display"
+        android:icon="@drawable/ic_display"
+        android:title="视频" />
+    <item
+        android:id="@+id/action_user"
+        android:icon="@drawable/ic_user"
+        android:title="我的" />
+</menu>

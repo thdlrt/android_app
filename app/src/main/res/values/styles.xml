@@ -1,0 +1,10 @@
+<resources>
+    <style name="button_list_color" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView.Colored</item>
+    </style>
+
+    <style name="FruitActivityTheme" parent="AppTheme">
+        <item
+            name="android:statusBarColor">@android:color/holo_blue_light</item>
+    </style>
+</resources>
