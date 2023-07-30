@@ -71,10 +71,16 @@ class WebActivity : AppCompatActivity() {
 
                 com.example.pa.R.id.action_left -> {
                     webview.goBack()
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        refresh2()
+                    }, 500)
                 }
 
                 com.example.pa.R.id.action_right -> {
                     webview.goForward()
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        refresh2()
+                    }, 500)
                 }
 
                 com.example.pa.R.id.action_multi -> {
@@ -204,6 +210,9 @@ class WebActivity : AppCompatActivity() {
             url = "https://www.baidu.com/s?wd=${title}"
             //存储搜索记录
             val dbHelper = DatabaseHelper.getInstance(this)
+            val list:ArrayList<Int> = dbHelper.searchHistoryByTitle(title)
+            if(list.size>0)
+                dbHelper.deleteHistory(list[0])
             dbHelper.insertHistory(title)
         }
         webview.settings.javaScriptEnabled = true

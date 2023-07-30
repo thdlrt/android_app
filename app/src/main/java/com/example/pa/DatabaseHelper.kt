@@ -102,7 +102,7 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
     fun getAllHistory(): ArrayList<HistoryAdapter.History> {
         val db = readableDatabase
         val historyList = ArrayList<HistoryAdapter.History>()
-        val cursor = db.query("History", null, null, null, null, null, "time DESC")
+        val cursor = db.query("History", null, null, null, null, null, "id DESC") // 更改这里的排序参数
 
         if (cursor.moveToFirst()) {
             do {
@@ -120,6 +120,25 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
         }
         cursor.close()
         return historyList
+    }
+    fun searchHistoryByTitle(title: String): ArrayList<Int> {
+        val db = readableDatabase
+        val idList = ArrayList<Int>()
+        val selection = "title = ?"
+        val selectionArgs = arrayOf(title)
+        val cursor = db.query("History", null, selection, selectionArgs, null, null, "time DESC")
+
+        if (cursor.moveToFirst()) {
+            do {
+                val idIndex = cursor.getColumnIndex("id")
+                if (idIndex != -1) {
+                    val id = cursor.getInt(idIndex)
+                    idList.add(id)
+                }
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return idList
     }
     fun deleteHistory(id: Int) {
         val db = writableDatabase
