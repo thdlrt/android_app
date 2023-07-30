@@ -17,10 +17,14 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 class NewsActivity : AppCompatActivity() {
     private var onstar:Boolean = false
     private var like:Boolean = false
+    private lateinit var dbHelper: DatabaseHelper
     private lateinit var binding:ActivityNewsBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        dbHelper = DatabaseHelper.getInstance(this)
         binding = ActivityNewsBinding.inflate(layoutInflater)
+        val id = intent.getIntExtra("id",-1)
+        val data = dbHelper.getNewsById(id)
         val view = binding.root
         setContentView(view)
         //返回按钮
@@ -30,13 +34,23 @@ class NewsActivity : AppCompatActivity() {
         }
         //收藏
         val star:ImageView = findViewById(R.id.star)
+        Log.v("assert","${dbHelper.isNewsIdExists(id)}")
+        if(dbHelper.isNewsIdExists(id)){
+            onstar = true
+            star.setImageResource(R.drawable.ic_onstar)
+        }else{
+            onstar = false
+            star.setImageResource(R.drawable.ic_star)
+        }
         star.setOnClickListener {
             if(onstar){
                 onstar = false
                 star.setImageResource(R.drawable.ic_star)
+                dbHelper.deleteNewsFavoriteById(id)
             }else{
                 onstar = true
                 star.setImageResource(R.drawable.ic_onstar)
+                dbHelper.insertNewsFavorite(NewsFavorite(id,data?.title!!))
             }
         }
         //按钮配置
@@ -79,10 +93,6 @@ class NewsActivity : AppCompatActivity() {
         share.setOnClickListener {
             Toast.makeText(this, "分享成功!经验+3",Toast.LENGTH_SHORT).show()
         }
-        val id = intent.getIntExtra("id",-1)
-        Log.w("assert","$id")
-        val dbHelper = DatabaseHelper.getInstance(this)
-        var data = dbHelper.getNewsById(id)
         //显示
         data?.let {
             binding.title.text = it.title

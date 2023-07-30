@@ -26,7 +26,8 @@ class SearchActivity : AppCompatActivity() {
         //按钮绑定
         val back:ImageView = findViewById(R.id.back)
         back.setOnClickListener {
-            onBackPressed()
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
         }
         //删除历史记录
         val delete:ImageView = findViewById(R.id.imageView2)

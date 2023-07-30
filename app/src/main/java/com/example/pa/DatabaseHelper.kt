@@ -52,11 +52,36 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
             "video_src TEXT," +
             "time TEXT," +
             "tag TEXT)"
+
+    val createWebpagesTable = """
+    CREATE TABLE Webpages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT,
+        title TEXT
+    )
+    """
+    val createNewsTable = """
+    CREATE TABLE NewsFavorites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        newsId INTEGER,
+        title TEXT
+    )
+    """
+    val createVideosTable = """
+    CREATE TABLE VideoFavorites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        videoId INTEGER,
+        title TEXT
+    )
+    """
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(createHistory)
         db.execSQL(createWeb)
         db.execSQL(createNews)
         db.execSQL(createVideo)
+        db.execSQL(createWebpagesTable)
+        db.execSQL(createNewsTable)
+        db.execSQL(createVideosTable)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -366,7 +391,120 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
         }
         return videos
     }
+    //收藏夹系统
+    fun getAllWebpages(): ArrayList<Webpage> {
+        val webpages = ArrayList<Webpage>()
+        val db = readableDatabase
+        val cursor = db.query("Webpages", null, null, null, null, null, null)
+        cursor.use {
+            while (it.moveToNext()) {
+                val urlIndex = it.getColumnIndex("url")
+                val titleIndex = it.getColumnIndex("title")
+                if (urlIndex != -1 && titleIndex != -1) {
+                    val url = it.getString(urlIndex)
+                    val title = it.getString(titleIndex)
+                    webpages.add(Webpage(url, title))
+                }
+            }
+        }
+        return webpages
+    }
+    fun getAllNewsFavorites(): ArrayList<NewsFavorite> {
+        val newsFavorites = ArrayList<NewsFavorite>()
+        val db = readableDatabase
+        val cursor = db.query("NewsFavorites", null, null, null, null, null, null)
+
+        cursor.use {
+            while (it.moveToNext()) {
+                val idIndex = it.getColumnIndex("newsId")
+                val titleIndex = it.getColumnIndex("title")
+                if (idIndex != -1 && titleIndex != -1) {
+                    val id = it.getInt(idIndex)
+                    val title = it.getString(titleIndex)
+                    newsFavorites.add(NewsFavorite(id, title))
+                }
+            }
+        }
+        return newsFavorites
+    }
+    fun getAllVideoFavorites(): ArrayList<VideoFavorite> {
+        val videoFavorites = ArrayList<VideoFavorite>()
+        val db = readableDatabase
+        val cursor = db.query("VideoFavorites", null, null, null, null, null, null)
+
+        cursor.use {
+            while (it.moveToNext()) {
+                val idIndex = it.getColumnIndex("videoId")
+                val titleIndex = it.getColumnIndex("title")
+                if (idIndex != -1 && titleIndex != -1) {
+                    val id = it.getInt(idIndex)
+                    val title = it.getString(titleIndex)
+                    videoFavorites.add(VideoFavorite(id, title))
+                }
+            }
+        }
+        return videoFavorites
+    }
+    fun insertWebpage(webpage: Webpage) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("url", webpage.url)
+            put("title", webpage.title)
+        }
+        db.insert("Webpages", null, values)
+    }
+    fun insertNewsFavorite(newsFavorite: NewsFavorite) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("newsId", newsFavorite.newsId)
+            put("title", newsFavorite.title)
+        }
+        db.insert("NewsFavorites", null, values)
+    }
+    fun insertVideoFavorite(videoFavorite: VideoFavorite) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("videoId", videoFavorite.videoId)
+            put("title", videoFavorite.title)
+        }
+        db.insert("VideoFavorites", null, values)
+    }
+    fun deleteWebpageByUrl(url: String) {
+        val db = writableDatabase
+        db.delete("Webpages", "url = ?", arrayOf(url))
+    }
+    fun deleteNewsFavoriteById(newsId: Int) {
+        val db = writableDatabase
+        db.delete("NewsFavorites", "newsId = ?", arrayOf(newsId.toString()))
+    }
+    fun deleteVideoFavoriteById(videoId: Int) {
+        val db = writableDatabase
+        db.delete("VideoFavorites", "videoId = ?", arrayOf(videoId.toString()))
+    }
+    fun isWebpageUrlExists(url: String): Boolean {
+        val db = readableDatabase
+        val cursor = db.query("Webpages", arrayOf("url"), "url = ?", arrayOf(url), null, null, null)
+        val exists = cursor.moveToFirst()
+        cursor.close()
+        return exists
+    }
+    fun isNewsIdExists(newsId: Int): Boolean {
+        val db = readableDatabase
+        val cursor = db.query("NewsFavorites", arrayOf("newsId"), "newsId = ?", arrayOf(newsId.toString()), null, null, null)
+        val exists = cursor.moveToFirst()
+        cursor.close()
+        return exists
+    }
+    fun isVideoIdExists(videoId: Int): Boolean {
+        val db = readableDatabase
+        val cursor = db.query("VideoFavorites", arrayOf("videoId"), "videoId = ?", arrayOf(videoId.toString()), null, null, null)
+        val exists = cursor.moveToFirst()
+        cursor.close()
+        return exists
+    }
 }
+
+
 
 
 

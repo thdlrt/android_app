@@ -10,8 +10,12 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
+import androidx.viewpager.widget.ViewPager
 import com.bumptech.glide.Glide
 import com.example.pa.databinding.FragmentUserBinding
+import com.google.android.material.tabs.TabLayout
 import de.hdodenhof.circleimageview.CircleImageView
 
 class UserFragment : Fragment() {
@@ -33,8 +37,39 @@ class UserFragment : Fragment() {
             val intent = Intent(getActivity(), EditActivity::class.java)
             startActivity(intent)
         }
-    }
+        val viewPager: ViewPager = view.findViewById(R.id.viewPager)
+        val tabLayout: TabLayout = view.findViewById(R.id.tabLayout)
 
+        // 设置ViewPager的适配器
+        viewPager.adapter = MyPagerAdapter(childFragmentManager)
+
+        // 将TabLayout与ViewPager关联
+        tabLayout.setupWithViewPager(viewPager)
+    }
+    inner class MyPagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
+
+        override fun getItem(position: Int): Fragment {
+            return when (position) {
+                0 -> WebFavoriteFragment()
+                1 -> NewsFavoriteFragment()
+                2 -> VideoFavoriteFragment()
+                else -> throw IllegalArgumentException("Invalid position")
+            }
+        }
+
+        override fun getCount(): Int {
+            return 3
+        }
+
+        override fun getPageTitle(position: Int): CharSequence? {
+            return when (position) {
+                0 -> "网页"
+                1 -> "新闻"
+                2 -> "视频"
+                else -> null
+            }
+        }
+    }
     override fun onResume() {
         super.onResume()
         //个人信息初始化

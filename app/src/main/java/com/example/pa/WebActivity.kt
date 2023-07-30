@@ -6,16 +6,21 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.util.Log
 import android.util.Patterns
+import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.File
 import java.io.FileOutputStream
@@ -79,23 +84,29 @@ class WebActivity : AppCompatActivity() {
 
                 }
 
-                com.example.pa.R.id.action_user -> {
-
-                }
-
                 else -> false
             }
             true
         }
         //收藏
         val star:ImageView = findViewById(R.id.star)
+        webview.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    refresh2()
+                }, 500)
+            }
+            false
+        }
         star.setOnClickListener {
             if(onstar){
                 onstar = false
                 star.setImageResource(R.drawable.ic_star)
+                dbHelper.deleteWebpageByUrl(webview.url!!)
             }else{
                 onstar = true
                 star.setImageResource(R.drawable.ic_onstar)
+                dbHelper.insertWebpage(Webpage(webview.url!!,webview.title!!))
             }
         }
         //关闭虚拟键盘
@@ -106,6 +117,20 @@ class WebActivity : AppCompatActivity() {
         //加载页面
         refresh(intent.getIntExtra("id", -1))
 
+    }
+    //url刷新
+    fun refresh2(){
+        val star:ImageView = findViewById(R.id.star)
+        val edittext: EditText = findViewById(R.id.editText)
+        val newUrl = webview?.url.toString()
+        edittext.setText(newUrl)
+        if (dbHelper.isWebpageUrlExists(newUrl)) {
+            star.setImageResource(R.drawable.ic_onstar)
+            onstar = true
+        } else {
+            star.setImageResource(R.drawable.ic_star)
+            onstar = false
+        }
     }
     fun refresh(id:Int){
         webId = id
@@ -181,11 +206,11 @@ class WebActivity : AppCompatActivity() {
             val dbHelper = DatabaseHelper.getInstance(this)
             dbHelper.insertHistory(title)
         }
-        val webLine:EditText = findViewById(R.id.editText)
-        webLine.text = Editable.Factory.getInstance().newEditable(url)
         webview.settings.javaScriptEnabled = true
         webview.webViewClient = WebViewClient()
         webview.loadUrl(url)
+        //设置收藏状态
+        refresh2()
     }
     //判断是否是网址
     fun isUrl(input: String): Boolean {
@@ -200,6 +225,9 @@ class WebActivity : AppCompatActivity() {
         else
             super.onBackPressed()
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+        Handler(Looper.getMainLooper()).postDelayed({
+            refresh2()
+        }, 500)
     }
     //返回值接收
     override fun onActivityResult(requestCode: Int, resultCode: Int,
