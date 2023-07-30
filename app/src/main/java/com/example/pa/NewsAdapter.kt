@@ -65,8 +65,10 @@ class NewsAdapter(private val items: List<News>, private val context: Context): 
             holder.type.text = item.type
             holder.from.text = item.writer
             holder.icon.setImageResource(item.icon)
-            val bitmap = BitmapFactory.decodeFile(item.smallPix)
-            holder.pix.setImageBitmap(bitmap)
+            if(item.smallPix!=null) {
+                val bitmap = loadBitmap(context, item.smallPix)
+                holder.pix.setImageBitmap(bitmap)
+            }
             //跳转新闻页
             holder.main.setOnClickListener {
                 val intent = Intent(context, NewsActivity::class.java)

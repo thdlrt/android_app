@@ -89,8 +89,8 @@ class NewsActivity : AppCompatActivity() {
             binding.writer.text = it.writer
             if(it.bigPix!=null) {
                 binding.pix.visibility = View.VISIBLE
-                val myBitmap = BitmapFactory.decodeFile(it.bigPix)
-                binding.pix.setImageBitmap(myBitmap)
+                val bitmap = loadBitmap(this, it.bigPix)
+                binding.pix.setImageBitmap(bitmap)
             }
             binding.content.text = it.content
         }

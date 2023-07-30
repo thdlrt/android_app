@@ -45,10 +45,18 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
             "type TEXT," +
             "writer TEXT)"
 
+    val createVideo = "CREATE TABLE videos (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+            "title TEXT," +
+            "pix_src TEXT," +
+            "video_src TEXT," +
+            "time TEXT," +
+            "tag TEXT)"
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(createHistory)
         db.execSQL(createWeb)
         db.execSQL(createNews)
+        db.execSQL(createVideo)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -261,6 +269,102 @@ class DatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(co
         }
         cursor.close()
         return news
+    }
+    //视频库
+    fun getVideoById(id: Int): Video? {
+        val db = readableDatabase
+        val cursor = db.query("videos", null, "id=?", arrayOf(id.toString()), null, null, null)
+        return cursor.use {
+            if (it.moveToFirst()) {
+                val titleIndex = it.getColumnIndex("title")
+                val pixSrcIndex = it.getColumnIndex("pix_src")
+                val videoSrcIndex = it.getColumnIndex("video_src")
+                val timeIndex = it.getColumnIndex("time")
+                val tagIndex = it.getColumnIndex("tag")
+
+                if (titleIndex != -1 && pixSrcIndex != -1 && videoSrcIndex != -1 && timeIndex != -1 && tagIndex != -1) {
+                    val title = it.getString(titleIndex)
+                    val pixSrc = it.getString(pixSrcIndex)
+                    val videoSrc = it.getString(videoSrcIndex)
+                    val time = it.getString(timeIndex)
+                    val tagString = it.getString(tagIndex)
+                    val tags = tagString.split(",").map { it.trim() } as ArrayList<String>
+                    Video(id, title, pixSrc, videoSrc, time, tags)
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
+        }
+    }
+
+    fun getAllVideos(): ArrayList<Video> {
+        val videos = ArrayList<Video>()
+        val db = readableDatabase
+        val cursor = db.query("videos", null, null, null, null, null, null)
+        cursor.use {
+            val idIndex = it.getColumnIndex("id")
+            val titleIndex = it.getColumnIndex("title")
+            val pixSrcIndex = it.getColumnIndex("pix_src")
+            val videoSrcIndex = it.getColumnIndex("video_src")
+            val timeIndex = it.getColumnIndex("time")
+            val tagIndex = it.getColumnIndex("tag")
+
+            if (idIndex != -1 && titleIndex != -1 && pixSrcIndex != -1 && videoSrcIndex != -1 && timeIndex != -1 && tagIndex != -1) {
+                while (it.moveToNext()) {
+                    val id = it.getInt(idIndex)
+                    val title = it.getString(titleIndex)
+                    val pixSrc = it.getString(pixSrcIndex)
+                    val videoSrc = it.getString(videoSrcIndex)
+                    val time = it.getString(timeIndex)
+                    val tagString = it.getString(tagIndex)
+                    val tags = tagString.split(",").map { it.trim() } as ArrayList<String>
+                    videos.add(Video(id, title, pixSrc, videoSrc, time, tags))
+                }
+            }
+        }
+        return videos
+    }
+    fun insertVideo(video: Video) {
+        val db = writableDatabase
+        val contentValues = ContentValues().apply {
+            put("title", video.title)
+            put("pix_src", video.pix_src)
+            put("video_src", video.video_src)
+            put("time", video.time)
+            put("tag", video.tag.joinToString(",")) // 将标签列表转换为逗号分隔的字符串
+        }
+        db.insert("videos", null, contentValues)
+    }
+    fun searchVideosByTitle(titleKeyword: String): ArrayList<Video> {
+        val videos = ArrayList<Video>()
+        val db = readableDatabase
+        val selection = "title LIKE ?"
+        val selectionArgs = arrayOf("%$titleKeyword%")
+        val cursor = db.query("videos", null, selection, selectionArgs, null, null, null)
+        cursor.use {
+            val idIndex = it.getColumnIndex("id")
+            val titleIndex = it.getColumnIndex("title")
+            val pixSrcIndex = it.getColumnIndex("pix_src")
+            val videoSrcIndex = it.getColumnIndex("video_src")
+            val timeIndex = it.getColumnIndex("time")
+            val tagIndex = it.getColumnIndex("tag")
+
+            if (idIndex != -1 && titleIndex != -1 && pixSrcIndex != -1 && videoSrcIndex != -1 && timeIndex != -1 && tagIndex != -1) {
+                while (it.moveToNext()) {
+                    val id = it.getInt(idIndex)
+                    val title = it.getString(titleIndex)
+                    val pixSrc = it.getString(pixSrcIndex)
+                    val videoSrc = it.getString(videoSrcIndex)
+                    val time = it.getString(timeIndex)
+                    val tagString = it.getString(tagIndex)
+                    val tags = tagString.split(",").map { it.trim() } as ArrayList<String>
+                    videos.add(Video(id, title, pixSrc, videoSrc, time, tags))
+                }
+            }
+        }
+        return videos
     }
 }
 
