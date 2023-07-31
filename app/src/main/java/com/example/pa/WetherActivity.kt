@@ -1,70 +1,113 @@
 package com.example.pa
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowId
 import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 class WetherActivity : AppCompatActivity() {
-    private var wetherList:ArrayList<Wether> = ArrayList()
+    @SuppressLint("MissingInflatedId")
+    private var CityList = ArrayList<String>()
+    private var city:String = ""
+    private var i:Int = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_wether)
-        //加载动画
-        val loadingView: View = findViewById(R.id.loading_view)
-        loadingView.visibility = View.VISIBLE
         //按钮绑定
         val back: ImageView = findViewById(R.id.back)
         back.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
-        //加载
-        Handler(Looper.getMainLooper()).postDelayed({
-            // 这里做数据加载或初始化视图的工作
-            initWethers()
-            val recyclerView: RecyclerView = findViewById(R.id.recyclerView)
-            recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-            recyclerView.adapter = WetherAdapter(wetherList)
-
-            // 数据加载完成，隐藏加载动画
-            loadingView.visibility = View.GONE
-        }, 500)
+        val add:ImageView = findViewById(R.id.add)
+        add.setOnClickListener {
+            val intent = Intent(this, CityActivity::class.java)
+            startActivity(intent)
+        }
+        val del:ImageView = findViewById(R.id.map)
+        del.setOnClickListener {
+            if(CityList.size==1)
+                return@setOnClickListener
+            CityList.remove(city)
+            val gson = Gson()
+            val json = gson.toJson(CityList)
+            val prefs = getSharedPreferences("wether", Context.MODE_PRIVATE)
+            val editor = prefs.edit()
+            editor.putString("city", json)
+            editor.apply()
+            refresh()
+        }
+        val viewPager:ViewPager2 = findViewById(R.id.main)
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                city = CityList[position]
+                i = position
+                //更新活动页面对应的点
+                val dotsLayout = findViewById<LinearLayout>(R.id.dotsLayout)
+                for (i in 0 until dotsLayout.childCount) {
+                    val dot = dotsLayout.getChildAt(i)
+                    if (i == position) {
+                        dot.setBackgroundResource(R.drawable.indicator_active) // 当前页面的点样式
+                    } else {
+                        dot.setBackgroundResource(R.drawable.indicator_inactive) // 其他页面的点样式
+                    }
+                }
+            }
+        })
     }
 
-    private fun initWethers(){
-        wetherList.add(Wether("现在",R.drawable.ic_clear_day,"31°"))
-        wetherList.add(Wether("11时",R.drawable.ic_clear_day,"32°"))
-        wetherList.add(Wether("12时",R.drawable.ic_partly_cloud_day,"33°"))
-        wetherList.add(Wether("13时",R.drawable.ic_partly_cloud_day,"33°"))
-        wetherList.add(Wether("14时",R.drawable.ic_partly_cloud_day,"33°"))
-        wetherList.add(Wether("15时",R.drawable.ic_partly_cloud_day,"32°"))
-        wetherList.add(Wether("16时",R.drawable.ic_partly_cloud_day,"31°"))
-        wetherList.add(Wether("17时",R.drawable.ic_partly_cloud_day,"28°"))
-        wetherList.add(Wether("18时",R.drawable.ic_clear_day,"27°"))
-        wetherList.add(Wether("19时",R.drawable.ic_clear_day,"25°"))
-        wetherList.add(Wether("20时",R.drawable.ic_clear_day,"25°"))
-        wetherList.add(Wether("21时",R.drawable.ic_clear_day,"24°"))
-        wetherList.add(Wether("22时",R.drawable.ic_clear_day,"24°"))
-        wetherList.add(Wether("23时",R.drawable.ic_partly_cloud_day,"23°"))
-        wetherList.add(Wether("24时",R.drawable.ic_partly_cloud_day,"23°"))
-        wetherList.add(Wether("1时",R.drawable.ic_clear_day,"23°"))
-        wetherList.add(Wether("2时",R.drawable.ic_clear_day,"22°"))
-        wetherList.add(Wether("3时",R.drawable.ic_clear_day,"22°"))
-        wetherList.add(Wether("4时",R.drawable.ic_partly_cloud_day,"22°"))
-        wetherList.add(Wether("5时",R.drawable.ic_partly_cloud_day,"22°"))
-        wetherList.add(Wether("6时",R.drawable.ic_partly_cloud_day,"23°"))
-        wetherList.add(Wether("7时",R.drawable.ic_partly_cloud_day,"25°"))
-        wetherList.add(Wether("8时",R.drawable.ic_partly_cloud_day,"25°"))
-        wetherList.add(Wether("9时",R.drawable.ic_clear_day,"26°"))
+    override fun onResume() {
+        super.onResume()
+        refresh()
+    }
+    fun refresh(){
+        val viewPager:ViewPager2 = findViewById(R.id.main)
+        viewPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+        val prefs = getSharedPreferences("wether", Context.MODE_PRIVATE)
+        if (!prefs.contains("city")) {
+            val cityList = arrayListOf("北京")
+            val gson = Gson()
+            val json = gson.toJson(cityList)
+            prefs.edit().putString("city", json).apply()
+        }
+        val json = prefs.getString("city", null)
+        val gson = Gson()
+        val type = object : TypeToken<ArrayList<String>>() {}.type
+        CityList = gson.fromJson(json, type)
+        if(city=="")
+            city = CityList[0]
+        viewPager.adapter = CWetherAdapter(CityList,this)
+        //更新下面点的数目
+        updateDots(CityList.size)
+    }
+    fun updateDots(count: Int) {
+        val dotsLayout = findViewById<LinearLayout>(R.id.dotsLayout)
+        dotsLayout.removeAllViews() // 先移除所有点
+
+        for (i in 0 until count) {
+            val dot = View(this)
+            val params = LinearLayout.LayoutParams(36, 36) // 设置点的大小
+            params.setMargins(6, 0, 6, 0) // 设置点之间的间距
+            dot.layoutParams = params
+            dot.setBackgroundResource(R.drawable.indicator_inactive) // 设置默认的点样式
+            dotsLayout.addView(dot) // 将点添加到布局中
+        }
     }
 }
